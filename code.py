@@ -1,70 +1,91 @@
-# Import necessary libraries
+import numpy as np
 import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-from sklearn.linear_model import LogisticRegression
+import matplotlib.pyplot as plt
+import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-from sklearn.metrics import confusion_matrix, accuracy_score
-import seaborn as sns
-import matplotlib.pyplot as plt
-import pickle
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix
+from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
 
 # Load the dataset
-data = pd.read_csv('data/bankloans.csv')
+df = pd.read_csv('../input/credit-risk-analysis-for-extending-bank-loans/bankloans.csv')
 
-# Check for missing values and drop rows with missing data
-data = data.dropna()
+# Display the first few rows of the dataset
+df.head()
 
-# Define features (X) and target variable (y)
-X = data.drop('default', axis=1)
-y = data['default']
+# Check for missing values
+df.isnull().sum()
 
-# Split the data into training and testing sets
+# Drop rows with missing values
+df = df.dropna()
+
+# Visualize the relationship between 'age' and 'income'
+fig, ax = plt.subplots(figsize=(20, 10))
+sns.lineplot(x='age', y='income', data=df, ax=ax)
+plt.show()
+
+# Visualize the relationship between 'age' and 'debtinc' (debt-to-income ratio)
+fig, ax = plt.subplots(figsize=(20, 10))
+sns.lineplot(x='age', y='debtinc', data=df, ax=ax)
+plt.show()
+
+# Display the distribution of the target variable ('default')
+df['default'].value_counts()
+
+# Define features (X) and target (y)
+X = df.drop(['default'], axis=1)
+y = df['default']
+
+# Split the dataset into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-# Scale the features
+# Standardize the feature data
 scaler = StandardScaler()
 X_train = scaler.fit_transform(X_train)
 X_test = scaler.transform(X_test)
 
-# Train Logistic Regression model
-lr = LogisticRegression()
-lr.fit(X_train, y_train)
-lr_acc = lr.score(X_test, y_test)
-print(f'Logistic Regression Accuracy: {lr_acc * 100:.2f}%')
-
-# Train Random Forest model
-rfc = RandomForestClassifier(n_estimators=100)
+# Train and evaluate a Random Forest classifier
+rfc = RandomForestClassifier(n_estimators=200)
 rfc.fit(X_train, y_train)
-rfc_acc = rfc.score(X_test, y_test)
-print(f'Random Forest Accuracy: {rfc_acc * 100:.2f}%')
+print(f'Random Forest Accuracy: {rfc.score(X_test, y_test):.2f}')
 
-# Train Support Vector Classifier (SVC) model
+# Perform cross-validation on Random Forest
+rfc_cv_scores = cross_val_score(rfc, X_train, y_train, cv=10)
+print(f'Random Forest Cross-validation Accuracy: {rfc_cv_scores.mean():.2f}')
+
+# Train and evaluate a Support Vector Classifier (SVC)
 svc = SVC()
 svc.fit(X_train, y_train)
-svc_acc = svc.score(X_test, y_test)
-print(f'Support Vector Classifier Accuracy: {svc_acc * 100:.2f}%')
+print(f'SVC Accuracy: {svc.score(X_test, y_test):.2f}')
 
-# Evaluate the best model using confusion matrix (Logistic Regression in this case)
+# Hyperparameter tuning for SVC using GridSearchCV
+param_grid = {'C': [0.1, 0.2, 0.4, 0.8, 1.2, 1.8, 4.0, 7.0],
+              'gamma': [0.1, 0.4, 0.8, 1.0, 2.0, 3.0],
+              'kernel': ['rbf', 'linear']}
+grid_search = GridSearchCV(SVC(), param_grid, scoring='accuracy', cv=10)
+grid_search.fit(X_train, y_train)
+print(f'Best Hyperparameters for SVC: {grid_search.best_params_}')
+
+# Train and evaluate the best SVC model
+svc_best = SVC(C=0.1, gamma=0.1, kernel='linear')
+svc_best.fit(X_train, y_train)
+print(f'Best SVC Model Accuracy: {svc_best.score(X_test, y_test):.2f}')
+
+# Train and evaluate a Logistic Regression model
+lr = LogisticRegression()
+lr.fit(X_train, y_train)
+print(f'Logistic Regression Accuracy: {lr.score(X_test, y_test):.2f}')
+
+# Generate predictions and evaluate the Logistic Regression model using a confusion matrix
 y_pred = lr.predict(X_test)
 cm = confusion_matrix(y_test, y_pred)
 
-# Visualize the confusion matrix
-plt.figure(figsize=(8, 6))
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues')
+# Visualize the confusion matrix using Seaborn
+fig, ax = plt.subplots(figsize=(20, 10))
+sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
 plt.title('Confusion Matrix - Logistic Regression')
 plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
-
-# Save the best model (Logistic Regression) to a file
-with open('models/logistic_model.pkl', 'wb') as model_file:
-    pickle.dump(lr, model_file)
-
-# Summary of model accuracies
-print(f'\nModel Accuracies:')
-print(f'Logistic Regression: {lr_acc * 100:.2f}%')
-print(f'Random Forest: {rfc_acc * 100:.2f}%')
-print(f'Support Vector Classifier: {svc_acc * 100:.2f}%')
-
