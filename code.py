@@ -76,3 +76,12 @@ yp = lr.predict(xtest)
 c= confusion_matrix(ytest,yp)
 fig ,ax = plt.subplots(figsize=(10,5))
 sns.heatmap(c,ax=ax)
+
+model_accuracies = {
+    'Random Forest': rfc_accuracy,
+    'SVC (Best)': svc_best_accuracy,
+    'Logistic Regression': lr_accuracy
+}
+
+best_model_name = max(model_accuracies, key=model_accuracies.get)
+print(f"The best model is {best_model_name} with an accuracy of {model_accuracies[best_model_name]:.2f}")
