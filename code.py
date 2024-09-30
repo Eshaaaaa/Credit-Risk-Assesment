@@ -1,91 +1,89 @@
-import numpy as np
-import pandas as pd
+# This Python 3 environment comes with many helpful analytics libraries installed
+# It is defined by the kaggle/python Docker image: https://github.com/kaggle/docker-python
+# For example, here's several helpful packages to load
+
+import numpy as np # linear algebra
+import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
 import matplotlib.pyplot as plt
 import seaborn as sns
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
+
 from sklearn.metrics import confusion_matrix
 from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import train_test_split, GridSearchCV, cross_val_score
+from sklearn.model_selection import train_test_split,GridSearchCV,cross_val_score
 
-# Load the dataset
-df = pd.read_csv('../input/credit-risk-analysis-for-extending-bank-loans/bankloans.csv')
+%matplotlib inline
+# Input data files are available in the read-only "../input/" directory
+# For example, running this (by clicking run or pressing Shift+Enter) will list all files under the input directory
 
-# Display the first few rows of the dataset
+import os
+for dirname, _, filenames in os.walk('D:\3 rd yr\Mini_Project'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
+
+# You can write up to 20GB to the current directory (/kaggle/working/) that gets preserved as output when you create a version using "Save & Run All" 
+# You can also write temporary files to /kaggle/temp/, but they won't be saved outside of the current session
+
+df = pd.read_csv('D:/3 rd yr/Mini_Project/credit/bankloans.csv')
 df.head()
-
-# Check for missing values
 df.isnull().sum()
-
-# Drop rows with missing values
+df.value_counts()
 df = df.dropna()
+print(df)
+fig,ax = plt.subplots(figsize=(5,5))
+sns.lineplot(x='age',y='income',data=df,ax=ax)
 
-# Visualize the relationship between 'age' and 'income'
-fig, ax = plt.subplots(figsize=(20, 10))
-sns.lineplot(x='age', y='income', data=df, ax=ax)
-plt.show()
+fig,ax = plt.subplots(figsize=(5,5))
+sns.lineplot(x='age',y='debtinc',data=df,ax=ax)
 
-# Visualize the relationship between 'age' and 'debtinc' (debt-to-income ratio)
-fig, ax = plt.subplots(figsize=(20, 10))
-sns.lineplot(x='age', y='debtinc', data=df, ax=ax)
-plt.show()
-
-# Display the distribution of the target variable ('default')
 df['default'].value_counts()
 
-# Define features (X) and target (y)
-X = df.drop(['default'], axis=1)
-y = df['default']
+x=df.drop(['default'],axis=1)
+y=df['default']
+print(x)
+print(y)
 
-# Split the dataset into training and testing sets
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+# Split the data into training and testing sets
+xtrain,xtest,ytrain,ytest = train_test_split(x,y,test_size=0.2,random_state=42)
 
-# Standardize the feature data
-scaler = StandardScaler()
-X_train = scaler.fit_transform(X_train)
-X_test = scaler.transform(X_test)
+sc = StandardScaler()
+xtrain=sc.fit_transform(xtrain)
+xtest=sc.fit_transform(xtest)
 
-# Train and evaluate a Random Forest classifier
 rfc = RandomForestClassifier(n_estimators=200)
-rfc.fit(X_train, y_train)
-print(f'Random Forest Accuracy: {rfc.score(X_test, y_test):.2f}')
+rfc.fit(xtrain,ytrain)
 
-# Perform cross-validation on Random Forest
-rfc_cv_scores = cross_val_score(rfc, X_train, y_train, cv=10)
-print(f'Random Forest Cross-validation Accuracy: {rfc_cv_scores.mean():.2f}')
+rfc.score(xtest,ytest)
 
-# Train and evaluate a Support Vector Classifier (SVC)
-svc = SVC()
-svc.fit(X_train, y_train)
-print(f'SVC Accuracy: {svc.score(X_test, y_test):.2f}')
+rfc2 = cross_val_score(estimator=rfc,X=xtrain,y=ytrain,cv=10)
+rfc2.mean()
 
-# Hyperparameter tuning for SVC using GridSearchCV
-param_grid = {'C': [0.1, 0.2, 0.4, 0.8, 1.2, 1.8, 4.0, 7.0],
-              'gamma': [0.1, 0.4, 0.8, 1.0, 2.0, 3.0],
-              'kernel': ['rbf', 'linear']}
-grid_search = GridSearchCV(SVC(), param_grid, scoring='accuracy', cv=10)
-grid_search.fit(X_train, y_train)
-print(f'Best Hyperparameters for SVC: {grid_search.best_params_}')
+#SVM
+sv = SVC()
+sv.fit(xtrain,ytrain)
+sv.score(xtest,ytest)
 
-# Train and evaluate the best SVC model
-svc_best = SVC(C=0.1, gamma=0.1, kernel='linear')
-svc_best.fit(X_train, y_train)
-print(f'Best SVC Model Accuracy: {svc_best.score(X_test, y_test):.2f}')
+model = GridSearchCV(sv,{
+    'C':[0.1,0.2,0.4,0.8,1.2,1.8,4.0,7.0],
+    'gamma':[0.1,0.4,0.8,1.0,2.0,3.0],
+    'kernel':['rbf','linear']
+},scoring='accuracy',cv=10)
 
-# Train and evaluate a Logistic Regression model
+model.fit(xtrain,ytrain)
+
+model.best_params_
+
+model2 = SVC(C=0.1,gamma=0.1,kernel='linear')
+model2.fit(xtrain,ytrain)
+model2.score(xtest,ytest)
+
 lr = LogisticRegression()
-lr.fit(X_train, y_train)
-print(f'Logistic Regression Accuracy: {lr.score(X_test, y_test):.2f}')
+lr.fit(xtrain,ytrain)
+lr.score(xtest,ytest)
 
-# Generate predictions and evaluate the Logistic Regression model using a confusion matrix
-y_pred = lr.predict(X_test)
-cm = confusion_matrix(y_test, y_pred)
-
-# Visualize the confusion matrix using Seaborn
-fig, ax = plt.subplots(figsize=(20, 10))
-sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax)
-plt.title('Confusion Matrix - Logistic Regression')
-plt.xlabel('Predicted')
-plt.ylabel('Actual')
-plt.show()
+yp = lr.predict(xtest)
+c= confusion_matrix(ytest,yp)
+fig ,ax = plt.subplots(figsize=(10,5))
+sns.heatmap(c,ax=ax)
