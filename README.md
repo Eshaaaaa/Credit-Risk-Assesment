@@ -1,27 +1,25 @@
-# Credit Risk Assessment Using Machine Learning
+# Credit Risk Assessment Project Using Machine Learning
 
-This project aims to develop a machine learning model to predict credit risk for loan applicants. By analyzing historical loan data, the model predicts the likelihood of a customer defaulting on a loan, assisting financial institutions in making informed decisions when extending credit.
+This project aims to develop a machine learning model to predict credit risk for loan applicants. The goal is to help financial institutions make informed decisions about extending loans by predicting the likelihood of default based on customer data.
 
 ## Features
-- Uses machine learning algorithms (Logistic Regression, Support Vector Machine, Random Forest) to predict credit risk.
-- Preprocesses historical loan application data, including features such as customer demographics, credit history, and loan information.
-- Compares multiple models and evaluates their performance to select the best model for predicting loan defaults.
+- Uses Random Forest, Support Vector Machine (SVM), and Logistic Regression to predict credit risk.
+- Evaluates models using accuracy, confusion matrices, and cross-validation scores to identify the best performing algorithm.
+- Provides visualizations to understand the relationship between customer features and credit risk.
 
 ## Technologies Used
-- **Python**: Main programming language for the project.
+- **Python**: Programming language used for analysis and model building.
 - **Pandas**: For data manipulation and preprocessing.
-- **Scikit-learn**: For implementing machine learning models and evaluation.
-- **Matplotlib & Seaborn**: For data visualization.
-- **Jupyter Notebook**: For interactive data analysis and model building.
+- **Scikit-learn**: For machine learning models and evaluation.
+- **Seaborn & Matplotlib**: For data visualization.
+- **Jupyter Notebook**: For an interactive coding environment.
 
 ## Project Structure
 ```plaintext
 ├── data
 │   └── bankloans.csv         # Input dataset
-├── models
-│   └── logistic_model.pkl     # Trained logistic regression model
-├── notebooks
-│   └── CreditRiskAssessment.ipynb  # Main notebook for training and evaluation
 ├── README.md                  # Project README file
+├── credit_risk_assessment.ipynb # Jupyter notebook with the analysis and models
 └── requirements.txt           # Python dependencies
+
 
